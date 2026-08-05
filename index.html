@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Implantação</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --yellow: #f5e6a3;
+            --yellow-light: #faf3d0;
+            --yellow-dark: #e6d47a;
+            --border: rgba(255,255,255,0.08);
+            --border-accent: rgba(245,230,163,0.2);
+            --text: #ffffff;
+            --text2: rgba(255,255,255,0.6);
+            --text3: rgba(255,255,255,0.3);
+            --input-bg: rgba(0,0,0,0.25);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d1117, #161b22 30%, #1a2332 60%, #0d1117);
+            background-attachment: fixed;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(ellipse at 15% 30%, rgba(245,230,163,0.03), transparent 50%),
+                        radial-gradient(ellipse at 85% 70%, rgba(245,230,163,0.02), transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+            position: relative; z-index: 1;
+        }
+
+        .glass {
+            background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 1px 0 rgba(255,255,255,0.03) inset;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 24px;
+        }
+        .header h1 {
+            font-size: 1.4rem; font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--yellow));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p { font-size: 0.75rem; color: var(--text2); font-weight: 300; margin-top: 3px; }
+        .header .line { width:36px; height:2px; background: linear-gradient(90deg, var(--yellow), var(--yellow-dark)); margin:8px auto 0; border-radius:2px; box-shadow: 0 0 8px rgba(245,230,163,0.25); }
+
+        /* Info btn */
+        .btn-info {
+            position: fixed; top:14px; right:14px;
+            width:34px; height:34px; border-radius:50%;
+            background: linear-gradient(145deg, rgba(245,230,163,0.1), rgba(245,230,163,0.03));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(245,230,163,0.15);
+            color: var(--yellow); font-size:0.9rem; font-weight:700;
+            cursor: pointer; z-index:100;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .btn-info:hover { transform: scale(1.1); background: rgba(245,230,163,0.15); }
+
+        /* ===== POPUP ===== */
+        .popup-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 500; padding: 16px;
+            transition: all 0.35s ease;
+        }
+        .popup-overlay.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+        .popup-box {
+            background: transparent;
+            max-width: 900px; width: 100%;
+            transition: transform 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .popup-cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .popup-cards-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .popup-card.full-width {
+            grid-column: span 3;
+        }
+        @media (max-width: 850px) {
+            .popup-cards-row { grid-template-columns: 1fr; }
+            .popup-box { max-width: 500px; }
+        }
+        .popup-card {
+            background: linear-gradient(160deg, rgba(22,27,34,0.96), rgba(13,17,23,0.96));
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .popup-overlay.hidden .popup-box { transform: translateY(20px) scale(0.96); }
+
+        .popup-box h2 {
+            color: var(--yellow); font-size:1.1rem; font-weight:700;
+            text-align: center; margin-bottom: 16px;
+        }
+
+        .popup-section {
+            margin-bottom: 14px;
+        }
+        .popup-section-title {
+            color: var(--yellow); font-size:0.72rem; font-weight:600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(245,230,163,0.1);
+        }
+
+        .popup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .popup-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .popup-field {
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .popup-field label {
+            font-size: 0.65rem; font-weight: 500;
+            color: var(--text2); text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .popup-field input {
+            padding: 8px 10px;
+            border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+            background: var(--input-bg); color: var(--text);
+            font-size: 0.8rem; font-family: 'Inter', sans-serif;
+            transition: all 0.25s; outline: none;
+        }
+        .popup-field input:focus {
+            border-color: var(--yellow);
+            box-shadow: 0 0 0 2px rgba(245,230,163,0.08);
+        }
+        .popup-field input::placeholder { color: var(--text3); }
+        .popup-field input[type="date"] { color-scheme: dark; }
+        .popup-field input[type="number"]::-webkit-outer-spin-button,
+        .popup-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin:0; }
+        .popup-field input[type="number"] { -moz-appearance: textfield; }
+
+        .popup-note {
+            text-align: center; font-size: 0.65rem;
+            color: rgba(245,230,163,0.45); margin-top: 12px;
+            font-style: italic;
+        }
+
+        .btn-popup-calc {
+            display: block; width: 100%;
+            margin: 16px 0 0; padding: 12px;
+            border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow-dark));
+            color: #1a1a2e; font-size: 0.85rem; font-weight: 700;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 4px 16px rgba(245,230,163,0.15);
+        }
+        .btn-popup-calc::before {
+            content: ''; position: absolute; top:0; left:-100%;
+            width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.4s;
+        }
+        .btn-popup-calc:hover::before { left: 100%; }
+        .btn-popup-calc:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(245,230,163,0.25); }
+
+        /* ===== MAIN LAYOUT ===== */
+                .main-layout { display: none;
+            grid-template-columns: 330px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        .main-layout.visible { display: grid; animation: fadeInUp 0.5s ease; }
+
+        @media (max-width: 850px) { .main-layout { grid-template-columns: 1fr; } }
+
+        /* Left panel */
+        .left-panel { padding: 16px 18px 18px; }
+        .left-panel .panel-title {
+            font-size: 0.82rem; font-weight: 700; color: var(--text);
+            text-align: center; margin-bottom: 14px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .left-row {
+            display: grid; grid-template-columns: 130px 1fr;
+            align-items: center; gap: 8px;
+            margin-bottom: 8px;
+        }
+        .left-label {
+            font-size: 0.62rem; font-weight: 600;
+            color: var(--text2); text-transform: uppercase; letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .left-input {
+            width: 100%; padding: 6px 10px;
+            border-radius: 7px; border: 1px solid var(--border);
+            background: var(--input-bg); color: var(--text);
+            font-size: 0.78rem; font-family: 'Inter', sans-serif;
+            height: 32px; line-height: 18px;
+            transition: all 0.25s; outline: none;
+            display: block;
+        }
+        .left-input:focus { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(245,230,163,0.08); }
+        .left-input[type="date"] { color-scheme: dark; }
+        .left-input[readonly] {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: var(--text2);
+        }
+        .left-note {
+            text-align: center; font-size: 0.6rem;
+            color: rgba(245,230,163,0.4); margin-top: 10px; font-style: italic;
+        }
+
+        /* Right panel */
+        .right-panel { padding: 18px; height: 100%; }
+
+        /* Equal height for both panels */
+        .left-panel, .right-panel {
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-layout {
+            align-items: stretch;
+            position: relative;
+            z-index: 1;
+        }
+        .right-panel {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Tooltip styles */
+        .calc-cell {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip {
+            visibility: hidden;
+            width: 240px;
+            background: #161b22;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 9999;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            border: 1px solid var(--yellow);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            pointer-events: none;
+            white-space: normal;
+        }
+        .calc-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-15px);
+        }
+        .tooltip strong { color: var(--yellow); }
+        .tooltip .formula { font-family: monospace; display: block; margin-top: 4px; color: var(--text2); }
+        .section-title-bar {
+            padding: 8px 14px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow-dark));
+            border-radius: 8px;
+            text-align: center; margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(245,230,163,0.15);
+        }
+        .section-title-bar h3 { font-size: 0.78rem; font-weight: 700; color: #1a1a2e; letter-spacing: 0.4px; }
+
+        .table-wrapper {
+            overflow: visible;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        
+        /* Ensure table doesn't clip tooltips but allows horizontal scroll on mobile if needed */
+        @media (max-width: 850px) {
+            .table-wrapper { overflow-x: auto; }
+        }
+
+        .results-table {
+            width: 100%; min-width: 720px;
+            border-collapse: collapse;
+        }
+        .results-table thead th {
+            background: rgba(245,230,163,0.06);
+            color: var(--yellow); font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.3px;
+            padding: 9px 8px; text-align: center;
+            border-bottom: 1px solid rgba(245,230,163,0.12);
+            white-space: nowrap;
+        }
+        .results-table tbody td {
+            padding: 10px 8px; text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.78rem; color: var(--text2);
+            white-space: nowrap;
+        }
+        .results-table tbody tr:hover td { background: rgba(245,230,163,0.02); }
+
+        .dept-cell { font-weight: 700; color: var(--yellow) !important; font-size: 0.8rem !important; }
+
+        .tbl-input {
+            width: 100%; height: 32px; padding: 0 8px;
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);
+            background: var(--input-bg); color: var(--text);
+            font-size: 0.78rem; font-family: 'Inter', sans-serif;
+            text-align: center; transition: all 0.25s; outline: none;
+        }
+        .meta-alert-bg {
+            background-color: rgba(255, 71, 87, 0.3) !important;
+            border-color: #ff4757 !important;
+        }
+        .alert-container {
+            display: none;
+            background: rgba(255, 71, 87, 0.1);
+            border-left: 4px solid #ff4757;
+            color: #ffb8b8;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+        .results-table th:nth-child(1) { width: 100px; }
+        .results-table th:nth-child(2) { width: 165px; }
+        .results-table th:nth-child(3) { width: 80px; }
+        .results-table th:nth-child(4) { width: 90px; }
+        .results-table th:nth-child(5), .results-table th:nth-child(6), .results-table th:nth-child(7) { width: 110px; }
+        .tbl-input:focus { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(245,230,163,0.08); }
+        .tbl-input::placeholder { color: var(--text3); }
+        .tbl-input[type="date"] { color-scheme: dark; }
+        .tbl-input[type="number"]::-webkit-outer-spin-button,
+        .tbl-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+        .tbl-input[type="number"] { -moz-appearance: textfield; }
+
+        .calc-cell { font-weight: 700; color: var(--yellow) !important; font-size: 0.82rem !important; }
+        .calc-cell.negative { color: #ff6b6b !important; }
+
+        /* Buttons */
+        .buttons-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-top: 16px;
+        }
+        .btn-back {
+            padding: 8px 18px; border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text2); font-size: 0.72rem; font-weight: 600;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+        .btn-recalc {
+            padding: 8px 22px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow-dark));
+            color: #1a1a2e; font-size: 0.78rem; font-weight: 700;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 3px 12px rgba(245,230,163,0.15);
+            border: none;
+        }
+        .btn-recalc::before {
+            content: ''; position: absolute; top:0; left:-100%;
+            width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.4s;
+        }
+        .btn-recalc:hover::before { left: 100%; }
+        .btn-recalc:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(245,230,163,0.25); }
+
+        /* Summary */
+        .summary-section { display: none; margin-top: 18px; }
+        .summary-section.visible { display: block; animation: fadeInUp 0.4s ease; }
+        .summary-card { padding: 18px; }
+        .summary-card h3 { color: var(--yellow); font-size: 0.82rem; margin-bottom: 10px; font-weight: 700; }
+        .summary-text { color: var(--text2); line-height: 1.7; font-size: 0.78rem; }
+        .summary-text strong { color: var(--yellow); }
+        .summary-text p { margin-bottom: 8px; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; padding: 16px;
+            opacity:0; visibility:hidden; transition: all 0.35s;
+        }
+        .modal-overlay.active { opacity:1; visibility:visible; }
+        .modal-content {
+            background: linear-gradient(160deg, rgba(22,27,34,0.97), rgba(13,17,23,0.97));
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            max-width: 500px; width: 100%;
+            max-height: 80vh; overflow-y: auto;
+            padding: 26px;
+            transform: translateY(16px) scale(0.96);
+            transition: all 0.35s ease;
+            box-shadow: 0 16px 60px rgba(0,0,0,0.45);
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
+        .modal-content h2 { color: var(--yellow); font-size: 1.1rem; margin-bottom: 14px; text-align: center; font-weight: 700; }
+        .modal-content p { color: var(--text2); line-height: 1.6; margin-bottom: 8px; font-size: 0.78rem; }
+        .modal-content .example-box {
+            background: rgba(245,230,163,0.05); border: 1px solid rgba(245,230,163,0.1);
+            border-radius: 10px; padding: 14px; margin: 12px 0;
+        }
+        .modal-content .example-box h4 { color: var(--yellow); margin-bottom: 8px; font-size: 0.75rem; font-weight: 700; }
+        .modal-content .example-box .calc-step {
+            padding: 5px 8px; background: rgba(0,0,0,0.2); border-radius: 6px;
+            margin: 5px 0; font-family: 'Courier New', monospace; font-size: 0.7rem;
+            color: var(--yellow-light);
+        }
+        .btn-close-modal {
+            display: block; margin: 16px auto 0; padding: 10px 24px;
+            border: none; border-radius: 8px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow-dark));
+            color: #1a1a2e; font-size: 0.78rem; font-weight: 700;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.25s; box-shadow: 0 3px 10px rgba(245,230,163,0.15);
+        }
+        .btn-close-modal:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(245,230,163,0.25); }
+
+        /* Spinner */
+        .spinner-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 2000; opacity:0; visibility:hidden; transition: all 0.3s;
+        }
+        .spinner-overlay.active { opacity:1; visibility:visible; }
+        .spinner-container { width: 200px; text-align: center; }
+        .spinner {
+            width: 52px; height: 52px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.05);
+            border-top: 3px solid var(--yellow);
+            border-right: 3px solid rgba(245,230,163,0.15);
+            animation: spin 0.85s linear infinite;
+            margin: 0 auto 14px;
+        }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .spinner-text { color: var(--text); font-size: 0.8rem; font-weight: 600; margin-bottom: 12px; }
+        .progress-container { width:100%; height:4px; background: rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-top:4px; }
+        .progress-bar { height:100%; background: linear-gradient(90deg, var(--yellow), var(--yellow-dark)); border-radius:2px; width:0%; transition: width 0.1s linear; box-shadow: 0 0 6px rgba(245,230,163,0.15); }
+        .progress-percent { color: var(--yellow); font-size: 1rem; font-weight: 800; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+        /* Particles */
+        .particle {
+            position: fixed; width:2px; height:2px;
+            background: rgba(245,230,163,0.15); border-radius:50%;
+            pointer-events: none; z-index: 0;
+        }
+        .particle:nth-child(1){top:15%;left:8%;animation:fl1 9s ease-in-out infinite}
+        .particle:nth-child(2){top:65%;left:92%;animation:fl2 11s ease-in-out infinite}
+        .particle:nth-child(3){top:82%;left:4%;animation:fl1 8s ease-in-out infinite reverse}
+        .particle:nth-child(4){top:25%;left:88%;animation:fl2 10s ease-in-out infinite reverse}
+        .particle:nth-child(5){top:48%;left:48%;animation:fl1 12s ease-in-out infinite}
+        @keyframes fl1 { 0%,100%{transform:translate(0,0) scale(1);opacity:.15} 50%{transform:translate(12px,-18px) scale(1.2);opacity:.35} }
+        @keyframes fl2 { 0%,100%{transform:translate(0,0) scale(1);opacity:.1} 50%{transform:translate(-8px,14px) scale(1.1);opacity:.3} }
+
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+        @media(max-width:600px){
+            .header h1{font-size:1.1rem}
+            .popup-box{padding:18px}
+            .popup-grid{grid-template-columns:1fr}
+            .results-table{min-width:600px}
+            .left-row{grid-template-columns:1fr}
+            .left-label{white-space:normal}
+        }
+
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(245,230,163,0.15);border-radius:2px}
+    </style>
+</head>
+<body>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div>
+
+    <button class="btn-info" onclick="openModal()" title="Como usar">?</button>
+
+    <!-- ===== POPUP ===== -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-box">
+            <h2 style="margin-bottom: 0;">Preencha os Dados da Implantação</h2>
+            
+            <div class="popup-cards-grid">
+                <!-- Top Card: Dados Gerais -->
+                <div class="popup-card">
+                    <div class="popup-section-title">Dados Gerais</div>
+                    <div class="popup-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="popup-field">
+                            <label>Data Onboarding</label>
+                            <input type="date" id="popOnboarding">
+                        </div>
+                        <div class="popup-field">
+                            <label>Go Live (Geral)</label>
+                            <input type="date" id="popGoLiveGeral">
+                        </div>
+                        <div class="popup-field">
+                            <label>Entrega de Banco</label>
+                            <input type="date" id="popEntrega">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Deptos -->
+                <div class="popup-cards-row">
+                    <!-- Card Fiscal -->
+                    <div class="popup-card">
+                        <div class="popup-section-title">Fiscal</div>
+                        <div class="popup-grid full">
+                            <div class="popup-field">
+                                <label>Go Live</label>
+                                <input type="date" id="popGoLiveFiscal">
+                            </div>
+                            <div class="popup-field">
+                                <label>Colaboradores</label>
+                                <input type="number" id="popColabFiscal" placeholder="0" min="1">
+                            </div>
+                            <div class="popup-field">
+                                <label>Empresas</label>
+                                <input type="number" id="popEmpresasFiscal" placeholder="0" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Contábil -->
+                    <div class="popup-card">
+                        <div class="popup-section-title">Contábil</div>
+                        <div class="popup-grid full">
+                            <div class="popup-field">
+                                <label>Go Live</label>
+                                <input type="date" id="popGoLiveContabil">
+                            </div>
+                            <div class="popup-field">
+                                <label>Colaboradores</label>
+                                <input type="number" id="popColabContabil" placeholder="0" min="1">
+                            </div>
+                            <div class="popup-field">
+                                <label>Empresas</label>
+                                <input type="number" id="popEmpresasContabil" placeholder="0" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Folha -->
+                    <div class="popup-card">
+                        <div class="popup-section-title">Folha</div>
+                        <div class="popup-grid full">
+                            <div class="popup-field">
+                                <label>Go Live</label>
+                                <input type="date" id="popGoLiveFolha">
+                            </div>
+                            <div class="popup-field">
+                                <label>Colaboradores</label>
+                                <input type="number" id="popColabFolha" placeholder="0" min="1">
+                            </div>
+                            <div class="popup-field">
+                                <label>Empresas</label>
+                                <input type="number" id="popEmpresasFolha" placeholder="0" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <p class="popup-note" style="margin-top: 0;">***Preencher somente os campos acima***</p>
+                <button class="btn-popup-calc" onclick="doCalculation()">Calcular Metas</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal-content">
+            <h2>Como Usar a Calculadora</h2>
+            <p>Preencha os campos no popup inicial e a tabela de resultados será gerada automaticamente.</p>
+            <p><strong style="color:var(--yellow)">Campos obrigatórios:</strong></p>
+            <p><strong>Geral:</strong> Data Onboarding, Go Live e Entrega de Banco.</p>
+            <p><strong>Por departamento:</strong> Go Live, Colaboradores e Qtd. Empresas.</p>
+            <div class="example-box">
+                <h4>Exemplo:</h4>
+                <div class="calc-step">Dias úteis (Entrega a Go Live) = NETWORKDAYS.INTL()</div>
+                <div class="calc-step">Meta diária = ROUND(Empresas / Colab / Dias, 1)</div>
+                <div class="calc-step">Meta semanal = ROUND(Meta diária × 4.5, 0)</div>
+            </div>
+            <p><strong style="color:var(--yellow)">Feriados:</strong> Ano Novo, Tiradentes, Dia do Trabalho, Independência, Aparecida, Finados, Proclamação, Consciência Negra, Natal.</p>
+            <button class="btn-close-modal" onclick="closeModal()">Entendi!</button>
+        </div>
+    </div>
+
+    <!-- Spinner -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-text">Calculando metas...</div>
+            <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container">
+        <div class="header glass">
+            <h1>Calculadora de Implantação</h1>
+            <p>Definição de estratégia para implantação</p>
+            <div class="line"></div>
+        </div>
+
+        <div class="main-layout" id="mainLayout">
+            <div class="left-panel glass">
+                <div class="panel-title">Metas de Implantação</div>
+                <div class="left-row">
+                    <span class="left-label">Data Onboarding</span>
+                    <input type="date" id="leftOnboarding" class="left-input">
+                </div>
+                <div class="left-row">
+                    <span class="left-label">Go Live</span>
+                    <input type="date" id="leftGoLive" class="left-input">
+                </div>
+                <div class="left-row">
+                    <span class="left-label">Entrega Banco</span>
+                    <input type="date" id="leftEntrega" class="left-input">
+                </div>
+                <div class="left-row">
+                    <span class="left-label">Dias Implantação</span>
+                    <input type="text" id="leftDias" class="left-input" readonly value="-">
+                </div>
+                <p class="left-note">***Preencher somente as células em branco***</p>
+            </div>
+
+            <div class="right-panel glass">
+                <div class="section-title-bar"><h3>Metas de Implantação</h3></div>
+                <div id="alertContainer" class="alert-container"></div>
+                <div class="table-wrapper">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Dpto.</th>
+                                <th>Go Live</th>
+                                <th>Colab.</th>
+                                <th>Empresas</th>
+                                <th>Meta DIÁRIA</th>
+                                <th>Meta SEMANAL</th>
+                                <th>Dias Úteis Depto.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="dept-cell">Fiscal</td>
+                                <td><input type="date" id="tblGoLiveFiscal" class="tbl-input"></td>
+                                <td><input type="number" id="tblColabFiscal" class="tbl-input" placeholder="0" min="1"></td>
+                                <td><input type="number" id="tblEmpresasFiscal" class="tbl-input" placeholder="0" min="1"></td>
+                                <td class="calc-cell" id="tblMdFiscal">-<span class="tooltip" id="tipMdFiscal"></span></td>
+                                <td class="calc-cell" id="tblMsFiscal">-<span class="tooltip" id="tipMsFiscal"></span></td>
+                                <td class="calc-cell" id="tblDiasFiscal">-<span class="tooltip" id="tipDiasFiscal"></span></td>
+                            </tr>
+                            <tr>
+                                <td class="dept-cell">Contábil</td>
+                                <td><input type="date" id="tblGoLiveContabil" class="tbl-input"></td>
+                                <td><input type="number" id="tblColabContabil" class="tbl-input" placeholder="0" min="1"></td>
+                                <td><input type="number" id="tblEmpresasContabil" class="tbl-input" placeholder="0" min="1"></td>
+                                <td class="calc-cell" id="tblMdContabil">-<span class="tooltip" id="tipMdContabil"></span></td>
+                                <td class="calc-cell" id="tblMsContabil">-<span class="tooltip" id="tipMsContabil"></span></td>
+                                <td class="calc-cell" id="tblDiasContabil">-<span class="tooltip" id="tipDiasContabil"></span></td>
+                            </tr>
+                            <tr>
+                                <td class="dept-cell">Folha</td>
+                                <td><input type="date" id="tblGoLiveFolha" class="tbl-input"></td>
+                                <td><input type="number" id="tblColabFolha" class="tbl-input" placeholder="0" min="1"></td>
+                                <td><input type="number" id="tblEmpresasFolha" class="tbl-input" placeholder="0" min="1"></td>
+                                <td class="calc-cell" id="tblMdFolha">-<span class="tooltip" id="tipMdFolha"></span></td>
+                                <td class="calc-cell" id="tblMsFolha">-<span class="tooltip" id="tipMsFolha"></span></td>
+                                <td class="calc-cell" id="tblDiasFolha">-<span class="tooltip" id="tipDiasFolha"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="buttons-row">
+                    <button class="btn-back" onclick="backToPopup()">Alterar Dados</button>
+                    <button class="btn-recalc" onclick="recalc()">Recalcular</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section" id="summarySection">
+            <div class="summary-card glass">
+                <h3>Resumo da Estratégia</h3>
+                <div class="summary-text" id="summaryText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ EXCEL ROUND ============
+        function excelRound(v, d) {
+            const m = Math.pow(10, d);
+            return v >= 0 ? Math.floor(v * m + 0.5) / m : Math.ceil(v * m - 0.5) / m;
+        }
+
+        // ============ HOLIDAYS ============
+        function getHolidays() {
+            const h = [];
+            for (let y = 2020; y <= 2060; y++) {
+                h.push(new Date(y,0,1), new Date(y,3,21), new Date(y,4,1),
+                   new Date(y,8,7), new Date(y,9,12), new Date(y,10,2),
+                   new Date(y,10,15), new Date(y,10,20), new Date(y,11,25));
+            }
+            return h;
+        }
+
+        // ============ NETWORKDAYS.INTL ============
+        function networkDaysIntl(start, end, holidays) {
+            let s = new Date(start); s.setHours(0,0,0,0);
+            let e = new Date(end); e.setHours(0,0,0,0);
+            if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0;
+            let neg = false;
+            if (s > e) { neg = true; const t = s; s = e; e = t; }
+            const hs = new Set();
+            holidays.forEach(h => { const d = new Date(h); d.setHours(0,0,0,0); hs.add(d.getTime()); });
+            let c = 0, cur = new Date(s);
+            while (cur <= e) {
+                const dw = cur.getDay();
+                if (dw !== 0 && dw !== 6 && !hs.has(cur.getTime())) c++;
+                cur.setDate(cur.getDate() + 1);
+            }
+            return neg ? -c : c;
+        }
+
+        // ============ HELPERS ============
+        function fmtBR(ds) { if (!ds) return '-'; const d = new Date(ds); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(-2); }
+        function fmtFull(ds) { if (!ds) return '-'; const d = new Date(ds); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+
+        // ============ MODAL ============
+        function openModal() { document.getElementById('infoModal').classList.add('active'); }
+        function closeModal() { document.getElementById('infoModal').classList.remove('active'); }
+        document.getElementById('infoModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+        // ============ SPINNER ============
+        function showSpinner(cb) {
+            const o = document.getElementById('spinnerOverlay');
+            const bar = document.getElementById('progressBar');
+            const pct = document.getElementById('progressPercent');
+            o.classList.add('active');
+            bar.style.width = '0%'; pct.textContent = '0%';
+            const total = 2200, t0 = Date.now();
+            const anim = () => {
+                const el = Date.now() - t0;
+                let p = Math.min(el/total, 0.97) * 100 + (Math.random()-0.5)*3;
+                p = Math.max(0, Math.min(100, p));
+                if (el >= total) p = 100;
+                bar.style.width = p+'%'; pct.textContent = Math.floor(p)+'%';
+                if (p < 100) { requestAnimationFrame(anim); }
+                else { setTimeout(() => { o.classList.remove('active'); cb(); }, 300); }
+            };
+            requestAnimationFrame(anim);
+        }
+
+        // ============ VALIDATE & CALCULATE ============
+        function validateFields(values) {
+            const errors = [];
+            if (!values.onb) errors.push('Data Onboarding');
+            if (!values.goLiveGeral) errors.push('Go Live Geral');
+            if (!values.entrega) errors.push('Entrega de Banco');
+            if (!values.glF || !values.cbF || values.cbF < 1 || !values.emF || values.emF < 1) errors.push('Dados Fiscal (Go Live, Colab, Empresas)');
+            if (!values.glC || !values.cbC || values.cbC < 1 || !values.emC || values.emC < 1) errors.push('Dados Contábil (Go Live, Colab, Empresas)');
+            if (!values.glFol || !values.cbFol || values.cbFol < 1 || !values.emFol || values.emFol < 1) errors.push('Dados Folha (Go Live, Colab, Empresas)');
+            return errors;
+        }
+
+        function runCalc(values) {
+            const holidays = getHolidays();
+
+            // Dias gerais
+            const diasGeral = networkDaysIntl(new Date(values.entrega), new Date(values.goLiveGeral), holidays);
+            document.getElementById('leftDias').value = diasGeral < 0 ? -diasGeral : diasGeral;
+
+            // Por departamento
+            const dF = networkDaysIntl(new Date(values.entrega), new Date(values.glF), holidays);
+            const dC = networkDaysIntl(new Date(values.entrega), new Date(values.glC), holidays);
+            const dFol = networkDaysIntl(new Date(values.entrega), new Date(values.glFol), holidays);
+
+            // Meta diária: ROUND(empresas / colab / dias, 1)
+            const mdF = excelRound(values.emF / values.cbF / dF, 1);
+            const mdC = excelRound(values.emC / values.cbC / dC, 1);
+            const mdFol = excelRound(values.emFol / values.cbFol / dFol, 1);
+
+            // Meta semanal: ROUND(meta_diaria * 4.5, 0)
+            const msF = excelRound(mdF * 4.5, 0);
+            const msC = excelRound(mdC * 4.5, 0);
+            const msFol = excelRound(mdFol * 4.5, 0);
+
+            // Set results (use absolute value when negative = dentro da meta)
+            const setCalc = (id, val, tooltipHtml) => {
+                const el = document.getElementById(id);
+                const tip = document.getElementById('tip' + id.replace('tbl', ''));
+                
+                // Preserve the tooltip span while updating text
+                el.childNodes[0].textContent = val < 0 ? -val : val;
+                if (tip) tip.innerHTML = tooltipHtml;
+                
+                el.dataset.rawVal = val;
+                el.classList.remove('meta-alert-bg');
+            };
+
+            const getMdTip = (e, c, d) => `<strong>Cálculo Meta Diária:</strong><br>Empresas (${e}) / Colaboradores (${c}) / Dias Úteis (${d})<br><span class="formula">= ROUND(${e} / ${c} / ${d}, 1)</span>`;
+            const getMsTip = (md) => `<strong>Cálculo Meta Semanal:</strong><br>Meta Diária (${md}) x 4.5 dias úteis/semana<br><span class="formula">= ROUND(${md} * 4.5, 0)</span>`;
+            const getDiasTip = (start, end) => `<strong>Cálculo Dias Úteis:</strong><br>Período entre Entrega de Banco e Go Live do Depto, excluindo fins de semana e feriados nacionais.`;
+
+            setCalc('tblMdFiscal', mdF, getMdTip(values.emF, values.cbF, dF)); 
+            setCalc('tblMsFiscal', msF, getMsTip(mdF)); 
+            setCalc('tblDiasFiscal', dF, getDiasTip(values.entrega, values.glF));
+            
+            setCalc('tblMdContabil', mdC, getMdTip(values.emC, values.cbC, dC)); 
+            setCalc('tblMsContabil', msC, getMsTip(mdC)); 
+            setCalc('tblDiasContabil', dC, getDiasTip(values.entrega, values.glC));
+            
+            setCalc('tblMdFolha', mdFol, getMdTip(values.emFol, values.cbFol, dFol)); 
+            setCalc('tblMsFolha', msFol, getMsTip(mdFol)); 
+            setCalc('tblDiasFolha', dFol, getDiasTip(values.entrega, values.glFol));
+
+            // Alert logic & styling
+            let alertMsgs = [];
+            const checkMeta = (deptName, md, id) => {
+                if (md > 3) {
+                    document.getElementById(id).classList.add('meta-alert-bg');
+                    alertMsgs.push(`⚠️ <strong>${deptName}</strong>: A meta de <strong>${md}</strong> empresas/dia excede o limite recomendado (máx. 3).`);
+                }
+            };
+            checkMeta('Fiscal', mdF, 'tblMdFiscal');
+            checkMeta('Contábil', mdC, 'tblMdContabil');
+            checkMeta('Folha', mdFol, 'tblMdFolha');
+
+            const alertDiv = document.getElementById('alertContainer');
+            if (alertMsgs.length > 0) {
+                alertDiv.innerHTML = alertMsgs.join('<br>');
+                alertDiv.style.display = 'block';
+            } else {
+                alertDiv.style.display = 'none';
+            }
+
+            // Negative styling
+            ['Fiscal','Contabil','Folha'].forEach(dept => {
+                ['tblMd'+dept, 'tblMs'+dept, 'tblDias'+dept].forEach(id => {
+                    const el = document.getElementById(id);
+                    const val = parseFloat(el.dataset.rawVal);
+                    if (!isNaN(val) && val < 0) el.classList.add('negative');
+                    else el.classList.remove('negative');
+                });
+            });
+
+            // Summary (use absolute values for negative = dentro da meta)
+            const plural = (n) => n > 1 ? 'es' : '';
+            const a = (v) => v < 0 ? -v : v;
+            const summaryHTML = `
+                <p>Em alinhamento com o cliente durante a reunião de Onboarding realizada em <strong>${fmtFull(values.onb)}</strong>, foram estabelecidas metas para garantir o alcance das expectativas de implementação:</p><br>
+                <p><strong>Departamento Fiscal:</strong><br>
+                <strong>Meta:</strong> ${values.cbF} colaborador${plural(values.cbF)} serão responsáveis por implantar ${a(mdF)} empresas/dia (totalizando ${a(msF)}/semana).<br>
+                <strong>Objetivo:</strong> Implantar ${values.emF} empresas no módulo fiscal até ${fmtFull(values.glF)}.</p><br>
+                <p><strong>Departamento Contábil:</strong><br>
+                <strong>Meta:</strong> ${values.cbC} colaborador${plural(values.cbC)} serão responsáveis por implantar ${a(mdC)} empresas/dia (totalizando ${a(msC)}/semana).<br>
+                <strong>Objetivo:</strong> Implantar ${values.emC} empresas no módulo contábil até ${fmtFull(values.glC)}.</p><br>
+                <p><strong>Departamento Pessoal:</strong><br>
+                <strong>Meta:</strong> ${values.cbFol} colaborador${plural(values.cbFol)} serão responsáveis por implantar ${a(mdFol)} empresas/dia (totalizando ${a(msFol)}/semana).<br>
+                <strong>Objetivo:</strong> Implantar ${values.emFol} empresas no módulo folha até ${fmtFull(values.glFol)}.</p><br>
+                <p>A previsão para a conclusão da conversão é até <strong>${fmtFull(values.entrega)}</strong>.</p>
+            `;
+            document.getElementById('summaryText').innerHTML = summaryHTML;
+        }
+
+        function doCalculation() {
+            const values = {
+                onb: document.getElementById('popOnboarding').value,
+                goLiveGeral: document.getElementById('popGoLiveGeral').value,
+                entrega: document.getElementById('popEntrega').value,
+                glF: document.getElementById('popGoLiveFiscal').value,
+                cbF: parseInt(document.getElementById('popColabFiscal').value) || 0,
+                emF: parseInt(document.getElementById('popEmpresasFiscal').value) || 0,
+                glC: document.getElementById('popGoLiveContabil').value,
+                cbC: parseInt(document.getElementById('popColabContabil').value) || 0,
+                emC: parseInt(document.getElementById('popEmpresasContabil').value) || 0,
+                glFol: document.getElementById('popGoLiveFolha').value,
+                cbFol: parseInt(document.getElementById('popColabFolha').value) || 0,
+                emFol: parseInt(document.getElementById('popEmpresasFolha').value) || 0,
+            };
+
+            const errors = validateFields(values);
+            if (errors.length > 0) {
+                alert('Preencha corretamente:\n' + errors.join(', '));
+                return;
+            }
+
+            // Sync left panel & table
+            document.getElementById('leftOnboarding').value = values.onb;
+            document.getElementById('leftGoLive').value = values.goLiveGeral;
+            document.getElementById('leftEntrega').value = values.entrega;
+            document.getElementById('tblGoLiveFiscal').value = values.glF;
+            document.getElementById('tblColabFiscal').value = values.cbF;
+            document.getElementById('tblEmpresasFiscal').value = values.emF;
+            document.getElementById('tblGoLiveContabil').value = values.glC;
+            document.getElementById('tblColabContabil').value = values.cbC;
+            document.getElementById('tblEmpresasContabil').value = values.emC;
+            document.getElementById('tblGoLiveFolha').value = values.glFol;
+            document.getElementById('tblColabFolha').value = values.cbFol;
+            document.getElementById('tblEmpresasFolha').value = values.emFol;
+
+            document.getElementById('popupOverlay').classList.add('hidden');
+            showSpinner(() => {
+                runCalc(values);
+                document.getElementById('mainLayout').classList.add('visible');
+                document.getElementById('summarySection').classList.add('visible');
+            });
+        }
+
+        function recalc() {
+            const values = {
+                onb: document.getElementById('leftOnboarding').value,
+                goLiveGeral: document.getElementById('leftGoLive').value,
+                entrega: document.getElementById('leftEntrega').value,
+                glF: document.getElementById('tblGoLiveFiscal').value,
+                cbF: parseInt(document.getElementById('tblColabFiscal').value) || 0,
+                emF: parseInt(document.getElementById('tblEmpresasFiscal').value) || 0,
+                glC: document.getElementById('tblGoLiveContabil').value,
+                cbC: parseInt(document.getElementById('tblColabContabil').value) || 0,
+                emC: parseInt(document.getElementById('tblEmpresasContabil').value) || 0,
+                glFol: document.getElementById('tblGoLiveFolha').value,
+                cbFol: parseInt(document.getElementById('tblColabFolha').value) || 0,
+                emFol: parseInt(document.getElementById('tblEmpresasFolha').value) || 0,
+            };
+
+            const errors = validateFields(values);
+            if (errors.length > 0) {
+                alert('Preencha corretamente:\n' + errors.join(', '));
+                return;
+            }
+
+            showSpinner(() => runCalc(values));
+        }
+
+        function backToPopup() {
+            document.getElementById('popOnboarding').value = document.getElementById('leftOnboarding').value;
+            document.getElementById('popGoLiveGeral').value = document.getElementById('leftGoLive').value;
+            document.getElementById('popEntrega').value = document.getElementById('leftEntrega').value;
+            document.getElementById('popGoLiveFiscal').value = document.getElementById('tblGoLiveFiscal').value;
+            document.getElementById('popColabFiscal').value = document.getElementById('tblColabFiscal').value;
+            document.getElementById('popEmpresasFiscal').value = document.getElementById('tblEmpresasFiscal').value;
+            document.getElementById('popGoLiveContabil').value = document.getElementById('tblGoLiveContabil').value;
+            document.getElementById('popColabContabil').value = document.getElementById('tblColabContabil').value;
+            document.getElementById('popEmpresasContabil').value = document.getElementById('tblEmpresasContabil').value;
+            document.getElementById('popGoLiveFolha').value = document.getElementById('tblGoLiveFolha').value;
+            document.getElementById('popColabFolha').value = document.getElementById('tblColabFolha').value;
+            document.getElementById('popEmpresasFolha').value = document.getElementById('tblEmpresasFolha').value;
+
+            document.getElementById('mainLayout').classList.remove('visible');
+            document.getElementById('summarySection').classList.remove('visible');
+            document.getElementById('popupOverlay').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
